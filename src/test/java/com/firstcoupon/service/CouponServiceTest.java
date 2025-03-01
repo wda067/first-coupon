@@ -3,16 +3,22 @@ package com.firstcoupon.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.firstcoupon.domain.Coupon;
 import com.firstcoupon.repository.CouponRepository;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+@Slf4j
 @SpringBootTest
 @ActiveProfiles("test")
 class CouponServiceTest {
@@ -26,9 +32,13 @@ class CouponServiceTest {
     @Autowired
     private CouponRepository couponRepository;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     @BeforeEach
     void setUp() {
         couponRepository.deleteAll();
+        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 
     @Test
@@ -96,7 +106,7 @@ class CouponServiceTest {
     }
 
     @Test
-    void redis를_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+    void Redis를_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
         //given
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
         CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
@@ -133,6 +143,32 @@ class CouponServiceTest {
             executorService.execute(() -> {
                 try {
                     couponService.issueCouponWithRedisson(userId);
+                } catch (Exception ignored) {
+                }
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        //then
+        long issuedCoupons = couponRepository.count();
+        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
+    }
+
+    @Test
+    void Kafka를_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+        //given
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
+        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+
+        //when
+        for (int i = 1; i <= THREAD_COUNT; i++) {
+            Long userId = (long) i;
+            executorService.execute(() -> {
+                try {
+                    couponService.issueCouponWithKafka(userId);
                 } catch (Exception ignored) {
                 }
                 latch.countDown();
