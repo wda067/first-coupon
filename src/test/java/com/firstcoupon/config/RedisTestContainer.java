@@ -14,7 +14,7 @@ public class RedisTestContainer {
 
     static {
         REDIS_CONTAINER = new FixedHostPortGenericContainer<>(DockerImageName.parse(REDIS_IMAGE).toString())
-                .withFixedExposedPort(6380, 6379) // 호스트 6380 -> 컨테이너 6379
+                .withFixedExposedPort(6380, 6379)  //호스트 6380 -> 컨테이너 6379
                 .withCommand("redis-server", "--requirepass", "1234");
         REDIS_CONTAINER.start();
     }
