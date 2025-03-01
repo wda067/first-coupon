@@ -120,4 +120,30 @@ class CouponServiceTest {
         long issuedCoupons = couponRepository.count();
         assertEquals(MAX_COUPON_COUNT, issuedCoupons);
     }
+
+    @Test
+    void 분산락을_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+        //given
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
+        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+
+        //when
+        for (int i = 1; i <= THREAD_COUNT; i++) {
+            Long userId = (long) i;
+            executorService.execute(() -> {
+                try {
+                    couponService.issueCouponWithRedisson(userId);
+                } catch (Exception ignored) {
+                }
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        //then
+        long issuedCoupons = couponRepository.count();
+        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
+    }
 }
