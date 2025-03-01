@@ -11,12 +11,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class CouponServiceTest {
 
-    private static final int MAX_COUPON = 100; // CouponService의 MAX_COUPON과 동일하게 설정
-    private static final int THREAD_COUNT = 150; // 최대 쿠폰보다 많은 스레드로 경쟁 유발
+    private static final int MAX_COUPON_COUNT = 100;  //쿠폰의 최대 수량
+    private static final int THREAD_COUNT = 150;  //최대 쿠폰보다 많은 스레드로 경쟁 유발
 
     @Autowired
     private CouponService couponService;
@@ -30,7 +32,7 @@ class CouponServiceTest {
     }
 
     @Test
-    void 쿠폰을_1개_발행한다() {
+    void 쿠폰을_1개_발급한다() {
         //given
         Long userId = 1L;
 
@@ -64,8 +66,7 @@ class CouponServiceTest {
 
         //then
         long issuedCoupons = couponRepository.count();
-        assertTrue(issuedCoupons > MAX_COUPON,
-                "경쟁 조건으로 인해 MAX_COUPON보다 많은 쿠폰이 발급되어야 함");
+        assertTrue(issuedCoupons > MAX_COUPON_COUNT);
     }
 
     @Test
@@ -91,6 +92,32 @@ class CouponServiceTest {
 
         //then
         long issuedCoupons = couponRepository.count();
-        assertEquals(MAX_COUPON, issuedCoupons);
+        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
+    }
+
+    @Test
+    void redis를_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+        //given
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
+        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+
+        //when
+        for (int i = 1; i <= THREAD_COUNT; i++) {
+            Long userId = (long) i;
+            executorService.execute(() -> {
+                try {
+                    couponService.issueCouponWithRedis(userId);
+                } catch (Exception ignored) {
+                }
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        //then
+        long issuedCoupons = couponRepository.count();
+        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
     }
 }
