@@ -1,12 +1,12 @@
 package com.firstcoupon.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Profile;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@ActiveProfiles("test")
 @Configuration
+@Profile("test")
 public class RedisTestContainer {
 
     private static final FixedHostPortGenericContainer<?> REDIS_CONTAINER;
