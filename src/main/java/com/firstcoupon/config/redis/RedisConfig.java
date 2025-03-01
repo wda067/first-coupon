@@ -1,4 +1,4 @@
-package com.firstcoupon.config;
+package com.firstcoupon.config.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

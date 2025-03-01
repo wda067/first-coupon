@@ -1,4 +1,4 @@
-package com.firstcoupon.config;
+package com.firstcoupon.config.redis;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
