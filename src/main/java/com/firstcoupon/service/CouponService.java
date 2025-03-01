@@ -1,5 +1,9 @@
 package com.firstcoupon.service;
 
+import static com.firstcoupon.constants.CouponMessage.*;
+import static com.firstcoupon.constants.CouponMessage.COUPON_SOLD_OUT;
+
+import com.firstcoupon.constants.CouponMessage;
 import com.firstcoupon.domain.Coupon;
 import com.firstcoupon.repository.CouponRepository;
 import java.util.concurrent.TimeUnit;
@@ -17,10 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class CouponService {
 
     private static final int MAX_COUPON_COUNT = 100;
-    private static final String COUPON_ALREADY_ISSUED = "이미 쿠폰을 발급받은 회원입니다.";
-    private static final String COUPON_SOLD_OUT = "쿠폰이 모두 소진되었습니다.";
-    private static final String COUPON_LOCK_FAILED = "쿠폰 발급이 지연되고 있습니다. 잠시 후 다시 시도해주세요.";
-    private static final String COUPON_ERROR = "쿠폰 발급 과정에서 오류가 발생했습니다.";
 
     private static final String COUPON_COUNT_KEY = "coupon_count";
     private static final String COUPON_USER_KEY_PREFIX = "coupon_user:";
@@ -34,12 +34,12 @@ public class CouponService {
     public void issueCoupon(Long userId) {
         boolean isAlreadyIssued = couponRepository.findByUserId(userId).isPresent();
         if (isAlreadyIssued) {
-            throw new IllegalStateException(COUPON_ALREADY_ISSUED);
+            throw new IllegalStateException(COUPON_ALREADY_ISSUED.getMessage());
         }
 
         long count = couponRepository.count();
         if (count >= MAX_COUPON_COUNT) {
-            throw new IllegalStateException(COUPON_SOLD_OUT);
+            throw new IllegalStateException(COUPON_SOLD_OUT.getMessage());
         }
 
         couponRepository.save(new Coupon(userId));
@@ -49,12 +49,12 @@ public class CouponService {
     public synchronized void issueCouponWithSynchronized(Long userId) {
         boolean isAlreadyIssued = couponRepository.findByUserId(userId).isPresent();
         if (isAlreadyIssued) {
-            throw new IllegalStateException(COUPON_ALREADY_ISSUED);
+            throw new IllegalStateException(COUPON_ALREADY_ISSUED.getMessage());
         }
 
         long count = couponRepository.count();
         if (count >= MAX_COUPON_COUNT) {
-            throw new IllegalStateException(COUPON_SOLD_OUT);
+            throw new IllegalStateException(COUPON_SOLD_OUT.getMessage());
         }
 
         couponRepository.save(new Coupon(userId));
@@ -65,7 +65,7 @@ public class CouponService {
 
         Boolean canIssue = redisTemplate.opsForValue().setIfAbsent(userKey, "1", 10, TimeUnit.MINUTES);
         if (Boolean.FALSE.equals(canIssue)) {  //이미 발급받은 사용자일 경우
-            throw new IllegalStateException(COUPON_ALREADY_ISSUED);
+            throw new IllegalStateException(COUPON_ALREADY_ISSUED.getMessage());
         }
 
         Long currentCount = redisTemplate.opsForValue().increment(COUPON_COUNT_KEY);
@@ -73,14 +73,14 @@ public class CouponService {
 
         try {
             if (currentCount > MAX_COUPON_COUNT) {
-                throw new IllegalStateException(COUPON_SOLD_OUT);
+                throw new IllegalStateException(COUPON_SOLD_OUT.getMessage());
             }
 
             couponRepository.save(new Coupon(userId));
         } catch (Exception e) {  //초과 발급 or 쿠폰 발급 실패시 롤백
             redisTemplate.opsForValue().decrement(COUPON_COUNT_KEY);
             redisTemplate.delete(userKey);
-            throw new IllegalStateException(COUPON_ERROR);
+            throw new IllegalStateException(COUPON_ERROR.getMessage());
         }
     }
 
@@ -94,12 +94,12 @@ public class CouponService {
                 try {
                     boolean isAlreadyIssued = couponRepository.findByUserId(userId).isPresent();
                     if (isAlreadyIssued) {
-                        throw new IllegalStateException(COUPON_ALREADY_ISSUED);
+                        throw new IllegalStateException(COUPON_ALREADY_ISSUED.getMessage());
                     }
 
                     long count = couponRepository.count();
                     if (count >= MAX_COUPON_COUNT) {
-                        throw new IllegalStateException(COUPON_SOLD_OUT);
+                        throw new IllegalStateException(COUPON_SOLD_OUT.getMessage());
                     }
 
                     couponRepository.save(new Coupon(userId));
@@ -107,11 +107,11 @@ public class CouponService {
                     lock.unlock();
                 }
             } else {
-                throw new IllegalStateException(COUPON_LOCK_FAILED);
+                throw new IllegalStateException(COUPON_LOCK_FAILED.getMessage());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException(COUPON_ERROR);
+            throw new IllegalStateException(COUPON_ERROR.getMessage());
         }
     }
 }
