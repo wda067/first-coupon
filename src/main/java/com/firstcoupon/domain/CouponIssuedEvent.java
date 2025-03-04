@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 public class CouponIssuedEvent {
 
     private Long userId;
+    private Long couponId;
 }

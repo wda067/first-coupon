@@ -1,4 +1,4 @@
-package com.firstcoupon.config.kafka;
+package com.firstcoupon.kafka;
 
 import com.firstcoupon.domain.CouponIssuedEvent;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ public class CouponProducer {
 
     private final KafkaTemplate<String, CouponIssuedEvent> kafkaTemplate;
 
-    public void send(Long userId) {
-        kafkaTemplate.send(TOPIC_NAME, new CouponIssuedEvent(userId));
+    public void send(Long userId, Long couponId) {
+        kafkaTemplate.send(TOPIC_NAME, new CouponIssuedEvent(userId, couponId));
     }
 }
