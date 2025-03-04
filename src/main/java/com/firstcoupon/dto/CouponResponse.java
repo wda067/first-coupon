@@ -2,6 +2,7 @@ package com.firstcoupon.dto;
 
 import com.firstcoupon.domain.Coupon;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,10 +19,16 @@ public class CouponResponse {
 
     private LocalDate expirationDate;
 
+    private LocalDateTime issueStartTime;
+
+    private LocalDateTime issueEndTime;
+
     public CouponResponse(Coupon coupon) {
         this.code = coupon.getCode();
         this.couponName = coupon.getCouponName();
         this.totalQuantity = coupon.getTotalQuantity();
         this.expirationDate = coupon.getExpirationDate();
+        this.issueStartTime = coupon.getIssueStartTime();
+        this.issueEndTime = coupon.getIssueEndTime();
     }
 }
