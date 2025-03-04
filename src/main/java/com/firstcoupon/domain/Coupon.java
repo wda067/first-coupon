@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -67,5 +68,9 @@ public class Coupon {
     public boolean isIssuable() {
         LocalDateTime now = LocalDateTime.now();
         return now.isAfter(issueStartTime) && now.isBefore(issueEndTime);
+    }
+
+    public long getDuration() {
+        return Duration.between(issueStartTime, issueEndTime).getSeconds();
     }
 }
