@@ -1,7 +1,10 @@
-package com.firstcoupon.config.kafka;
+package com.firstcoupon.kafka;
 
+import com.firstcoupon.dto.PartitionInfo;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -18,6 +21,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.stereotype.Component;
 
@@ -34,11 +38,17 @@ public class KafkaAdminClient {
     }
 
     //특정 토픽 정보 조회
-    public TopicDescription getTopicInfo(String topicName) throws ExecutionException, InterruptedException {
-        return adminClient.describeTopics(Collections.singletonList(topicName))
-                .allTopicNames()
-                .get()
-                .get(topicName);
+    public List<PartitionInfo> getTopicInfo(String topicName)
+            throws ExecutionException, InterruptedException {
+        TopicDescription topicDescription = adminClient.describeTopics(Collections.singletonList(topicName))
+                .topicNameValues()
+                .get(topicName)
+                .get();
+        List<PartitionInfo> list = new ArrayList<>();
+        for (TopicPartitionInfo partition : topicDescription.partitions()) {
+            list.add(new PartitionInfo(partition.partition(), partition.leader(), partition.replicas()));
+        }
+        return list;
     }
 
     //새로운 토픽 생성

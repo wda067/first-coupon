@@ -1,11 +1,11 @@
-package com.firstcoupon.controller;
+package com.firstcoupon.kafka;
 
-import com.firstcoupon.config.kafka.KafkaAdminClient;
+import com.firstcoupon.dto.PartitionInfo;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +32,7 @@ public class KafkaAdminController {
 
     //특정 토픽 정보 조회
     @GetMapping("/topics/{topicName}")
-    public ResponseEntity<TopicDescription> getTopicInfo(@PathVariable String topicName)
+    public ResponseEntity<List<PartitionInfo>> getTopicInfo(@PathVariable String topicName)
             throws ExecutionException, InterruptedException {
         return ResponseEntity.ok(kafkaAdminClient.getTopicInfo(topicName));
     }
