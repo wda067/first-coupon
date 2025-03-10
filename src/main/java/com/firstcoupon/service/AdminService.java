@@ -10,13 +10,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminService {
+
+    private static final Logger couponLogger = LoggerFactory.getLogger("CouponLogger");
 
     private final CouponRepository couponRepository;
 
@@ -34,6 +37,8 @@ public class AdminService {
         Coupon coupon = Coupon.create(request.getCouponName(), request.getTotalQuantity(), expirationDate,
                 issueStartTime, issueEndTime);
         couponRepository.save(coupon);
+
+        couponLogger.info("쿠폰 생성됨 - 코드: {}, 쿠폰명: {}", coupon.getCode(), coupon.getCouponName());
     }
 
     public List<CouponResponse> getCoupons() {
