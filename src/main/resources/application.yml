@@ -16,6 +16,12 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         generate_statistics: false
 
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+
   data:
     redis:
       host: localhost
