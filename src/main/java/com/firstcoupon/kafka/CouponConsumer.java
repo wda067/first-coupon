@@ -7,6 +7,8 @@ import com.firstcoupon.exception.CouponNotFound;
 import com.firstcoupon.repository.CouponRepository;
 import com.firstcoupon.repository.IssuedCouponRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Component;
 @Profile("!test")
 public class CouponConsumer {
 
+    private static final Logger couponLogger = LoggerFactory.getLogger("CouponLogger");
+
     private final IssuedCouponRepository issuedCouponRepository;
     private final CouponRepository couponRepository;
 
@@ -23,7 +27,8 @@ public class CouponConsumer {
     public void consume(CouponIssuedEvent event) {
         Coupon coupon = couponRepository.findById(event.getCouponId())
                 .orElseThrow(CouponNotFound::new);
-        IssuedCoupon issuedCoupon = IssuedCoupon.issue(event.getUserId(), coupon);
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(event.getEmail(), coupon);
         issuedCouponRepository.save(issuedCoupon);
+        couponLogger.info("쿠폰 발급됨 - 코드: {}, 사용자: {}", coupon.getCode(), event.getEmail());
     }
 }

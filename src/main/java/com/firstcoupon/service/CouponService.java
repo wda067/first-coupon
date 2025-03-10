@@ -19,17 +19,19 @@ import com.firstcoupon.repository.IssuedCouponRepository;
 import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CouponService {
+
+    private static final Logger couponLogger = LoggerFactory.getLogger("CouponLogger");
 
     private static final String COUPON_COUNT_KEY = "coupon_count";
     private static final String COUPON_USER_KEY_PREFIX = "coupon_user:";
@@ -43,7 +45,7 @@ public class CouponService {
 
     @Transactional
     public void issueCoupon(CouponIssue request) {
-        boolean isAlreadyIssued = issuedCouponRepository.findByUserId(request.getUserId()).isPresent();
+        boolean isAlreadyIssued = issuedCouponRepository.findByEmail(request.getEmail()).isPresent();
         if (isAlreadyIssued) {
             throw new CouponAlreadyIssued();
         }
@@ -63,13 +65,13 @@ public class CouponService {
             throw new CouponSoldOut();
         }
 
-        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getUserId(), coupon);
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);
         issuedCouponRepository.save(issuedCoupon);
     }
 
     @Transactional
     public synchronized void issueCouponWithSynchronized(CouponIssue request) {
-        boolean isAlreadyIssued = issuedCouponRepository.findByUserId(request.getUserId()).isPresent();
+        boolean isAlreadyIssued = issuedCouponRepository.findByEmail(request.getEmail()).isPresent();
         if (isAlreadyIssued) {
             throw new CouponAlreadyIssued();
         }
@@ -83,12 +85,12 @@ public class CouponService {
             throw new CouponSoldOut();
         }
 
-        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getUserId(), coupon);
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);
         issuedCouponRepository.save(issuedCoupon);
     }
 
     public void issueCouponWithRedis(CouponIssue request) {
-        String userKey = COUPON_USER_KEY_PREFIX + request.getUserId();
+        String userKey = COUPON_USER_KEY_PREFIX + request.getEmail();
 
         Coupon coupon = couponRepository.findByCode(request.getCode())
                 .orElseThrow(InvalidCouponCode::new);
@@ -108,7 +110,7 @@ public class CouponService {
                 throw new CouponSoldOut();
             }
 
-            IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getUserId(), coupon);
+            IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);
             issuedCouponRepository.save(issuedCoupon);
         } catch (Exception e) {  //초과 발급 or 쿠폰 발급 실패시 롤백
             redisTemplate.opsForValue().decrement(COUPON_COUNT_KEY);
@@ -125,7 +127,7 @@ public class CouponService {
             //5초 동안 락 획득을 시도하고, 락을 획득하면 10초 후 자동 해제
             if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
                 try {
-                    boolean isAlreadyIssued = issuedCouponRepository.findByUserId(request.getUserId()).isPresent();
+                    boolean isAlreadyIssued = issuedCouponRepository.findByEmail(request.getEmail()).isPresent();
                     if (isAlreadyIssued) {  //이미 발급받은 사용자일 경우
                         throw new CouponAlreadyIssued();
                     }
@@ -139,7 +141,7 @@ public class CouponService {
                         throw new CouponSoldOut();
                     }
 
-                    IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getUserId(), coupon);
+                    IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);
                     issuedCouponRepository.save(issuedCoupon);
                 } finally {
                     lock.unlock();
@@ -154,7 +156,7 @@ public class CouponService {
     }
 
     public void issueCouponWithKafka(CouponIssue request) {
-        String userKey = COUPON_USER_KEY_PREFIX + request.getUserId();
+        String userKey = COUPON_USER_KEY_PREFIX + request.getEmail();
 
         Coupon coupon = couponRepository.findByCode(request.getCode())
                 .orElseThrow(InvalidCouponCode::new);
@@ -173,12 +175,13 @@ public class CouponService {
             throw new CouponSoldOut();
         }
 
-        couponProducer.send(request.getUserId(), coupon.getId());
+        couponProducer.send(request.getEmail(), coupon.getId());
+        couponLogger.info("쿠폰 발급됨 - 코드: {}, 사용자: {}", request.getCode(), request.getEmail());
     }
 
     @Transactional
-    public void useCoupon(Long userId) {
-        IssuedCoupon issuedCoupon = issuedCouponRepository.findByUserId(userId)
+    public void useCoupon(String email) {
+        IssuedCoupon issuedCoupon = issuedCouponRepository.findByEmail(email)
                 .orElseThrow(IssuedCouponNotFound::new);
 
         LocalDate expirationDate = issuedCoupon.getCoupon().getExpirationDate();
@@ -194,5 +197,6 @@ public class CouponService {
         }
 
         issuedCoupon.use();
+        couponLogger.info("쿠폰 사용됨 - 코드: {}, 사용자: {}", issuedCoupon.getCoupon().getCode(), email);
     }
 }

@@ -3,7 +3,6 @@ package com.firstcoupon.controller;
 import com.firstcoupon.dto.CouponIssue;
 import com.firstcoupon.service.CouponService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +22,7 @@ public class CouponController {
     }
 
     @PostMapping("/use")
-    public void useCoupon(@RequestParam Long userId) {
-        couponService.useCoupon(userId);
+    public void useCoupon(@RequestParam String email) {
+        couponService.useCoupon(email);
     }
 }

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CouponIssuedEvent {
 
-    private Long userId;
+    private String email;
     private Long couponId;
 }

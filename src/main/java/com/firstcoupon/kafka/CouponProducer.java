@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CouponProducer {
@@ -15,7 +14,7 @@ public class CouponProducer {
 
     private final KafkaTemplate<String, CouponIssuedEvent> kafkaTemplate;
 
-    public void send(Long userId, Long couponId) {
-        kafkaTemplate.send(TOPIC_NAME, new CouponIssuedEvent(userId, couponId));
+    public void send(String email, Long couponId) {
+        kafkaTemplate.send(TOPIC_NAME, new CouponIssuedEvent(email, couponId));
     }
 }

@@ -1,5 +1,6 @@
 package com.firstcoupon.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -20,8 +21,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@EntityListeners(AuditingEntityListener.class)
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IssuedCoupon {
 
@@ -29,7 +30,8 @@ public class IssuedCoupon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    @Column(unique = true)
+    private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_id")
@@ -44,16 +46,16 @@ public class IssuedCoupon {
     private CouponStatus status;
 
     @Builder
-    public IssuedCoupon(Long userId, Coupon coupon, LocalDateTime usedAt, CouponStatus status) {
-        this.userId = userId;
+    public IssuedCoupon(String email, Coupon coupon, LocalDateTime usedAt, CouponStatus status) {
+        this.email = email;
         this.coupon = coupon;
         this.usedAt = usedAt;
         this.status = status;
     }
 
-    public static IssuedCoupon issue(Long userId, Coupon coupon) {
+    public static IssuedCoupon issue(String email, Coupon coupon) {
         return IssuedCoupon.builder()
-                .userId(userId)
+                .email(email)
                 .coupon(coupon)
                 .status(CouponStatus.ISSUED)
                 .build();

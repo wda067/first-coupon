@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface IssuedCouponRepository extends JpaRepository<IssuedCoupon, Long> {
 
-    Optional<IssuedCoupon> findByUserId(Long userId);
+    Optional<IssuedCoupon> findByEmail(String email);
 }

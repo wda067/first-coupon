@@ -16,5 +16,5 @@ public class CouponIssue {
     private String code;
 
     @NotNull
-    private Long userId;
+    private String email;
 }
