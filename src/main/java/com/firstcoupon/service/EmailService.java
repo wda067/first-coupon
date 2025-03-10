@@ -13,11 +13,13 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 @EnableRetry
+@EnableAsync
 public class EmailService {
 
     private static final Logger couponLogger = LoggerFactory.getLogger("CouponLogger");
