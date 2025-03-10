@@ -19,6 +19,7 @@ public enum ErrorCode {
     COUPON_EXPIRED("400", "쿠폰이 만료되었습니다."),
     ISSUED_COUPON_NOT_FOUND("404", "발급 받은 쿠폰이 존재하지 않습니다."),
     COUPON_NOT_FOUND("404", "존재하지 않는 쿠폰입니다."),
+    EMAIL_SEND_FAILURE("500", "이메일 전송에 실패했습니다."),
     COUPON_ERROR("500", "쿠폰 발급 과정에서 오류가 발생했습니다.");
 
     private final String code;
