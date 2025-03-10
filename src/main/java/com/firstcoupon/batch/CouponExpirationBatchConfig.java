@@ -2,14 +2,11 @@ package com.firstcoupon.batch;
 
 import com.firstcoupon.domain.Coupon;
 import com.firstcoupon.domain.IssuedCoupon;
-import com.firstcoupon.repository.IssuedCouponRepository;
 import com.firstcoupon.service.EmailService;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Collections;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -28,7 +25,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
-@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class CouponExpirationBatchConfig {
@@ -50,7 +46,6 @@ public class CouponExpirationBatchConfig {
 
     @Bean
     public Step couponExpirationBatchStep() {
-        log.info("couponExpirationBatchStep");
         return new StepBuilder("couponExpirationStep", jobRepository)
                 .<IssuedCoupon, IssuedCoupon>chunk(10, transactionManager)
                 .reader(couponPagingItemReader())
@@ -61,7 +56,6 @@ public class CouponExpirationBatchConfig {
 
     @Bean
     public JdbcPagingItemReader<IssuedCoupon> couponPagingItemReader() {
-        log.info("couponPagingItemReader");
         return new JdbcPagingItemReaderBuilder<IssuedCoupon>()
                 .name("couponPagingItemReader")
                 .dataSource(dataSource)
@@ -79,7 +73,7 @@ public class CouponExpirationBatchConfig {
                     setSelectClause("SELECT ic.email, c.coupon_name, c.expiration_date");
                     setFromClause("FROM issued_coupon ic JOIN coupon c ON ic.coupon_id = c.id");
                     setWhereClause("WHERE c.expiration_date = :targetDate AND ic.status = 'ISSUED'");
-                    setSortKeys(Collections.singletonMap("ic.email", Order.ASCENDING)); // 정렬 키 추가
+                    setSortKeys(Collections.singletonMap("ic.email", Order.ASCENDING));
                 }})
                 .parameterValues(Collections.singletonMap("targetDate", LocalDate.of(2025, 3, 31)))
                 .build();
