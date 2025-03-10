@@ -26,7 +26,7 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, CouponIssuedEvent> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
-        config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
         config.put(KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         config.put(GROUP_ID_CONFIG, "coupon-group");

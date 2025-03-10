@@ -27,7 +27,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, CouponIssuedEvent> producerFactory() {
         Map<String, Object> config = new HashMap<>();
-        config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
         config.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         config.put(ADD_TYPE_INFO_HEADERS, false);
@@ -45,7 +45,7 @@ public class KafkaProducerConfig {
     public NewTopic updateCouponIssuedTopic() {
         return TopicBuilder.name("coupon-issued")
                 .partitions(3)  //파티션 개수
-                .replicas(1)  //복제 개수
+                .replicas(3)  //복제 개수
                 .build();
     }
 }
