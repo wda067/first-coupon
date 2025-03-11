@@ -33,7 +33,7 @@ public class CouponService {
 
     private static final Logger couponLogger = LoggerFactory.getLogger("CouponLogger");
 
-    private static final String COUPON_COUNT_KEY = "coupon_count";
+    private static final String COUPON_COUNT_KEY_PREFIX = "coupon_count:";
     private static final String COUPON_USER_KEY_PREFIX = "coupon_user:";
     private static final String LOCK_KEY = "coupon_lock";
 
@@ -90,20 +90,21 @@ public class CouponService {
     }
 
     public void issueCouponWithRedis(CouponIssue request) {
-        String userKey = COUPON_USER_KEY_PREFIX + request.getEmail();
+        String userKey = COUPON_USER_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
+        String countKey = COUPON_COUNT_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
 
         Coupon coupon = couponRepository.findByCode(request.getCode())
                 .orElseThrow(InvalidCouponCode::new);
         long duration = coupon.getDuration();  //쿠폰 사용 기간
 
-        Boolean canIssue = redisTemplate.opsForValue().setIfAbsent(userKey, "1", duration, TimeUnit.SECONDS);
+        Boolean canIssue = redisTemplate.opsForValue().setIfAbsent(userKey, "issued", duration, TimeUnit.SECONDS);
         if (Boolean.FALSE.equals(canIssue)) {  //이미 발급받은 사용자일 경우
             throw new CouponAlreadyIssued();
         }
 
         int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
-        Long currentCount = redisTemplate.opsForValue().increment(COUPON_COUNT_KEY);  //현재 발급된 쿠폰 수량
-        redisTemplate.expire(COUPON_COUNT_KEY, duration, TimeUnit.SECONDS);
+        Long currentCount = redisTemplate.opsForValue().increment(countKey);  //현재 발급된 쿠폰 수량
+        redisTemplate.expire(countKey, duration, TimeUnit.SECONDS);
 
         try {
             if (currentCount > totalQuantity) {  //재고가 없을 경우
@@ -113,7 +114,7 @@ public class CouponService {
             IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);
             issuedCouponRepository.save(issuedCoupon);
         } catch (Exception e) {  //초과 발급 or 쿠폰 발급 실패시 롤백
-            redisTemplate.opsForValue().decrement(COUPON_COUNT_KEY);
+            redisTemplate.opsForValue().decrement(countKey);
             redisTemplate.delete(userKey);
             throw new CouponError();
         }
@@ -156,20 +157,21 @@ public class CouponService {
     }
 
     public void issueCouponWithKafka(CouponIssue request) {
-        String userKey = COUPON_USER_KEY_PREFIX + request.getEmail();
+        String userKey = COUPON_USER_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
+        String countKey = COUPON_COUNT_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
 
         Coupon coupon = couponRepository.findByCode(request.getCode())
                 .orElseThrow(InvalidCouponCode::new);
         long duration = coupon.getDuration();  //쿠폰 사용 기간
 
-        Boolean canIssue = redisTemplate.opsForValue().setIfAbsent(userKey, "1", duration, TimeUnit.SECONDS);
+        Boolean canIssue = redisTemplate.opsForValue().setIfAbsent(userKey, "issued", duration, TimeUnit.SECONDS);
         if (Boolean.FALSE.equals(canIssue)) {  //이미 발급받은 사용자일 경우
             throw new CouponAlreadyIssued();
         }
 
         int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
-        Long currentCount = redisTemplate.opsForValue().increment(COUPON_COUNT_KEY);  //현재 발급된 쿠폰 수량
-        redisTemplate.expire(COUPON_COUNT_KEY, duration, TimeUnit.SECONDS);
+        Long currentCount = redisTemplate.opsForValue().increment(countKey);  //현재 발급된 쿠폰 수량
+        redisTemplate.expire(countKey, duration, TimeUnit.SECONDS);
 
         if (currentCount > totalQuantity) {  //재고가 없을 경우
             throw new CouponSoldOut();
