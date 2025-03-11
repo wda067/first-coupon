@@ -6,7 +6,6 @@ import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CL
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
 import static org.springframework.kafka.support.serializer.JsonSerializer.ADD_TYPE_INFO_HEADERS;
 
-import com.firstcoupon.domain.CouponIssuedEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -22,10 +21,10 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 
 @Configuration
 @Profile("!test")
-public class KafkaProducerConfig {
+public class CouponProducerConfig {
 
     @Bean
-    public ProducerFactory<String, CouponIssuedEvent> producerFactory() {
+    public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
         config.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -37,15 +36,23 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, CouponIssuedEvent> kafkaTemplate() {
+    public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
-    public NewTopic updateCouponIssuedTopic() {
+    public NewTopic couponIssuedTopic() {
         return TopicBuilder.name("coupon-issued")
-                .partitions(3)  //파티션 개수
-                .replicas(3)  //복제 개수
+                .partitions(3)
+                .replicas(3)
+                .build();
+    }
+
+    @Bean
+    public NewTopic couponUsedTopic() {
+        return TopicBuilder.name("coupon-used")
+                .partitions(3)
+                .replicas(3)
                 .build();
     }
 }

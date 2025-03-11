@@ -82,7 +82,7 @@ public class CouponExpirationBatchConfig {
     @Bean
     public ItemProcessor<IssuedCoupon, IssuedCoupon> couponItemProcessor() {
         return issuedCoupon -> {
-            emailService.sendEmail(issuedCoupon.getEmail(), issuedCoupon.getCoupon());
+            emailService.sendCouponExpirationEmail(issuedCoupon.getEmail(), issuedCoupon.getCoupon().getCouponName());
             return issuedCoupon;
         };
     }

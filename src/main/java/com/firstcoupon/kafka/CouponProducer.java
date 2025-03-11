@@ -1,8 +1,8 @@
 package com.firstcoupon.kafka;
 
 import com.firstcoupon.domain.CouponIssuedEvent;
+import com.firstcoupon.domain.CouponUsedEvent;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -10,11 +10,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CouponProducer {
 
-    private static final String TOPIC_NAME = "coupon-issued";
-
-    private final KafkaTemplate<String, CouponIssuedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void send(String email, Long couponId) {
-        kafkaTemplate.send(TOPIC_NAME, new CouponIssuedEvent(email, couponId));
+        kafkaTemplate.send("coupon-issued", new CouponIssuedEvent(email, couponId));
+    }
+
+    public void send(String email, String couponName) {
+        kafkaTemplate.send("coupon-used", new CouponUsedEvent(email, couponName));
     }
 }

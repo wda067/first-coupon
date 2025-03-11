@@ -176,7 +176,6 @@ public class CouponService {
         }
 
         couponProducer.send(request.getEmail(), coupon.getId());
-        couponLogger.info("쿠폰 발급됨 - 코드: {}, 사용자: {}", request.getCode(), request.getEmail());
     }
 
     @Transactional
@@ -197,6 +196,7 @@ public class CouponService {
         }
 
         issuedCoupon.use();
+        couponProducer.send(email, issuedCoupon.getCoupon().getCouponName());
         couponLogger.info("쿠폰 사용됨 - 코드: {}, 사용자: {}", issuedCoupon.getCoupon().getCode(), email);
     }
 }
