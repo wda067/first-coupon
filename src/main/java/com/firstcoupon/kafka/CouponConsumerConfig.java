@@ -1,11 +1,13 @@
 package com.firstcoupon.kafka;
 
+import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 import static org.springframework.kafka.listener.ContainerProperties.AckMode.MANUAL_IMMEDIATE;
 import static org.springframework.kafka.support.serializer.JsonDeserializer.TRUSTED_PACKAGES;
+import static org.springframework.kafka.support.serializer.JsonDeserializer.VALUE_DEFAULT_TYPE;
 
 import com.firstcoupon.domain.CouponIssuedEvent;
 import com.firstcoupon.domain.CouponUsedEvent;
@@ -32,6 +34,8 @@ public class CouponConsumerConfig {
         config.put(VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         config.put(TRUSTED_PACKAGES, "*");
         config.put(ENABLE_AUTO_COMMIT_CONFIG, "false");
+        config.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put(VALUE_DEFAULT_TYPE, CouponIssuedEvent.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(config,
                 new StringDeserializer(),
@@ -46,6 +50,8 @@ public class CouponConsumerConfig {
         config.put(VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         config.put(TRUSTED_PACKAGES, "*");
         config.put(ENABLE_AUTO_COMMIT_CONFIG, "false");
+        config.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put(VALUE_DEFAULT_TYPE, CouponUsedEvent.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(config,
                 new StringDeserializer(),
