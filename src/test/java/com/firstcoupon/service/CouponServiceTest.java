@@ -1,27 +1,39 @@
 package com.firstcoupon.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.firstcoupon.domain.Coupon;
+import com.firstcoupon.domain.CouponStatus;
+import com.firstcoupon.domain.IssuedCoupon;
+import com.firstcoupon.dto.CouponIssue;
+import com.firstcoupon.exception.CouponAlreadyUsed;
+import com.firstcoupon.exception.NotIssuableTime;
 import com.firstcoupon.repository.CouponRepository;
+import com.firstcoupon.repository.IssuedCouponRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @SpringBootTest
 @ActiveProfiles("test")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CouponServiceTest {
-
-    private static final int MAX_COUPON_COUNT = 100;  //쿠폰의 최대 수량
-    private static final int THREAD_COUNT = 150;  //최대 쿠폰보다 많은 스레드로 경쟁 유발
 
     @Autowired
     private CouponService couponService;
@@ -30,38 +42,107 @@ class CouponServiceTest {
     private CouponRepository couponRepository;
 
     @Autowired
+    private IssuedCouponRepository issuedCouponRepository;
+
+    @Autowired
     private StringRedisTemplate redisTemplate;
 
+    private String code;
+    private int totalQuantity;
+    private int threadCount;  //최대 쿠폰의 수보다 많은 스레드로 경쟁 유발
+
+    @BeforeAll
+    void setup() {
+        Coupon coupon = Coupon.create(
+                "테스트 쿠폰",
+                1_000,
+                LocalDate.now().plusDays(7),
+                LocalDateTime.now().minusHours(1),
+                LocalDateTime.now().plusHours(1));
+        couponRepository.save(coupon);
+        Coupon savedCoupon = couponRepository.findAll().get(0);
+        code = savedCoupon.getCode();
+        totalQuantity = savedCoupon.getTotalQuantity();
+        threadCount = totalQuantity + 1000;
+    }
+
     @BeforeEach
-    void setUp() {
-        couponRepository.deleteAll();
+    void clean() {
+        issuedCouponRepository.deleteAll();
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 
     @Test
     void 쿠폰을_1개_발급한다() {
         //given
-        Long userId = 1L;
+        CouponIssue couponIssue = new CouponIssue(code, "test@test.com");
 
         //when
-        couponService.issueCoupon(userId);
+        couponService.issueCoupon(couponIssue);
 
         //then
-        assertEquals(1L, couponRepository.count());
+        assertEquals(1L, issuedCouponRepository.count());
+    }
+
+    @Test
+    void 쿠폰은_발급_가능한_시간에만_발급할_수있다() {
+        //given
+        //쿠폰 발급 가능 시간을 과거로 설정
+        Coupon coupon = Coupon.create("테스트", 100, LocalDate.now().plusDays(7),
+                LocalDateTime.now().minusMinutes(60), LocalDateTime.now().minusMinutes(30));
+        couponRepository.save(coupon);
+
+        CouponIssue couponIssue = new CouponIssue(coupon.getCode(), "test@test.com");
+
+        //expected
+        assertThrows(NotIssuableTime.class, () -> couponService.issueCoupon(couponIssue));
+    }
+
+    @Test
+    @Transactional
+    void 발급받은_쿠폰을_사용한다() {
+        //given
+        Coupon coupon = couponRepository.findAll().get(0);
+        String email = "test@test.com";
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(email, coupon);
+        issuedCouponRepository.save(issuedCoupon);
+
+        //when
+        couponService.useCoupon(email);
+
+        //then
+        assertEquals(CouponStatus.USED, issuedCoupon.getStatus());
+        assertNotNull(issuedCoupon.getUsedAt());
+    }
+
+    @Test
+    @Transactional
+    void 발급받은_쿠폰을_재사용할_수없다() {
+        //given
+        Coupon coupon = couponRepository.findAll().get(0);
+        String email = "test@test.com";
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(email, coupon);
+        issuedCouponRepository.save(issuedCoupon);
+
+        couponService.useCoupon(email);
+
+        //expected
+        assertThrows(CouponAlreadyUsed.class, () -> couponService.useCoupon(email));
     }
 
     @Test
     void 경쟁_조건으로_쿠폰이_초과_발급된다() throws InterruptedException {
         //given
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
-        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
         //when
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            long userId = i;
+        for (int i = 1; i <= threadCount; i++) {
+            String email = "test" + i + "@test.com";
+            CouponIssue couponIssue = new CouponIssue(code, email);
             executorService.execute(() -> {
                 try {
-                    couponService.issueCoupon(userId);
+                    couponService.issueCoupon(couponIssue);
                 } catch (Exception ignored) {
                 }
                 latch.countDown();
@@ -72,22 +153,24 @@ class CouponServiceTest {
         executorService.shutdown();
 
         //then
-        long issuedCoupons = couponRepository.count();
-        assertTrue(issuedCoupons > MAX_COUPON_COUNT);
+        long issuedCoupons = issuedCouponRepository.count();
+        log.info("issued {} coupons", issuedCoupons);
+        assertTrue(issuedCoupons > totalQuantity);
     }
 
     @Test
-    void synchronized를_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+    void synchronized를_사용하여_동시에_총_발급_수량까지만_발급된다() throws InterruptedException {
         //given
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
-        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
         //when
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            Long userId = (long) i;
+        for (int i = 1; i <= threadCount; i++) {
+            String email = "test" + i + "@test.com";
+            CouponIssue couponIssue = new CouponIssue(code, email);
             executorService.execute(() -> {
                 try {
-                    couponService.issueCouponWithSynchronized(userId);
+                    couponService.issueCouponWithSynchronized(couponIssue);
                 } catch (Exception ignored) {
                 }
                 latch.countDown();
@@ -98,22 +181,22 @@ class CouponServiceTest {
         executorService.shutdown();
 
         //then
-        long issuedCoupons = couponRepository.count();
-        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
+        assertEquals(totalQuantity, issuedCouponRepository.count());
     }
 
     @Test
-    void Redis를_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+    void Redis를_사용하여_동시에_총_발급_수량까지만_발급된다() throws InterruptedException {
         //given
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
-        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
         //when
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            Long userId = (long) i;
+        for (int i = 1; i <= threadCount; i++) {
+            String email = "test" + i + "@test.com";
+            CouponIssue couponIssue = new CouponIssue(code, email);
             executorService.execute(() -> {
                 try {
-                    couponService.issueCouponWithRedis(userId);
+                    couponService.issueCouponWithRedis(couponIssue);
                 } catch (Exception ignored) {
                 }
                 latch.countDown();
@@ -124,22 +207,22 @@ class CouponServiceTest {
         executorService.shutdown();
 
         //then
-        long issuedCoupons = couponRepository.count();
-        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
+        assertEquals(totalQuantity, issuedCouponRepository.count());
     }
 
     @Test
-    void 분산락을_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+    void 분산락을_사용하여_동시에_총_발급_수량까지만_발급된다() throws InterruptedException {
         //given
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
-        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
         //when
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            Long userId = (long) i;
+        for (int i = 1; i <= threadCount; i++) {
+            String email = "test" + i + "@test.com";
+            CouponIssue couponIssue = new CouponIssue(code, email);
             executorService.execute(() -> {
                 try {
-                    couponService.issueCouponWithRedisson(userId);
+                    couponService.issueCouponWithRedisson(couponIssue);
                 } catch (Exception ignored) {
                 }
                 latch.countDown();
@@ -150,22 +233,22 @@ class CouponServiceTest {
         executorService.shutdown();
 
         //then
-        long issuedCoupons = couponRepository.count();
-        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
+        assertEquals(totalQuantity, issuedCouponRepository.count());
     }
 
     @Test
-    void Kafka를_사용하여_동시에_100개의_쿠폰까지만_발급된다() throws InterruptedException {
+    void Kafka를_사용하여_동시에_총_발급_수량까지만_발급된다() throws InterruptedException {
         //given
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
-        CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
         //when
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            Long userId = (long) i;
+        for (int i = 1; i <= threadCount; i++) {
+            String email = "test" + i + "@test.com";
+            CouponIssue couponIssue = new CouponIssue(code, email);
             executorService.execute(() -> {
                 try {
-                    couponService.issueCouponWithKafka(userId);
+                    couponService.issueCouponWithKafka(couponIssue);
                 } catch (Exception ignored) {
                 }
                 latch.countDown();
@@ -174,9 +257,9 @@ class CouponServiceTest {
 
         latch.await();
         executorService.shutdown();
+        Thread.sleep(5000);
 
         //then
-        long issuedCoupons = couponRepository.count();
-        assertEquals(MAX_COUPON_COUNT, issuedCoupons);
+        assertEquals(totalQuantity, issuedCouponRepository.count());
     }
 }
