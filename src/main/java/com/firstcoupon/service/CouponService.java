@@ -91,7 +91,7 @@ public class CouponService {
 
     public void issueCouponWithRedis(CouponIssue request) {
         String userKey = COUPON_USER_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
-        String countKey = COUPON_COUNT_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
+        String countKey = COUPON_COUNT_KEY_PREFIX + request.getCode();
 
         Coupon coupon = couponRepository.findByCode(request.getCode())
                 .orElseThrow(InvalidCouponCode::new);
@@ -158,7 +158,7 @@ public class CouponService {
 
     public void issueCouponWithKafka(CouponIssue request) {
         String userKey = COUPON_USER_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
-        String countKey = COUPON_COUNT_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
+        String countKey = COUPON_COUNT_KEY_PREFIX + request.getCode();
 
         Coupon coupon = couponRepository.findByCode(request.getCode())
                 .orElseThrow(InvalidCouponCode::new);
