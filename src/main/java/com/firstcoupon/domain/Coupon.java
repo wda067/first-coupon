@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Duration;
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         uniqueConstraints = {
-                @UniqueConstraint(name = "unique_coupon", columnNames = {"couponName", "expirationDate"})
+                @UniqueConstraint(name = "unique_coupon", columnNames = {"coupon_name", "expiration_date"})
         }
 )
 public class Coupon {
@@ -35,6 +36,8 @@ public class Coupon {
 
     private int totalQuantity;
 
+    private int remainingQuantity;
+
     private LocalDate expirationDate;
 
     private LocalDateTime issueStartTime;
@@ -47,6 +50,7 @@ public class Coupon {
         this.code = code;
         this.couponName = couponName;
         this.totalQuantity = totalQuantity;
+        this.remainingQuantity = totalQuantity;
         this.expirationDate = expirationDate;
         this.issueStartTime = issueStartTime;
         this.issueEndTime = issueEndTime;
@@ -72,5 +76,11 @@ public class Coupon {
 
     public long getDuration() {
         return Duration.between(issueStartTime, issueEndTime).getSeconds();
+    }
+
+    public void decrementQuantity() {
+        if (remainingQuantity > 0) {
+            remainingQuantity--;
+        }
     }
 }

@@ -9,6 +9,8 @@ import com.firstcoupon.repository.CouponRepository;
 import com.firstcoupon.repository.IssuedCouponRepository;
 import com.firstcoupon.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -16,6 +18,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @Profile("!test")
@@ -31,9 +34,13 @@ public class CouponConsumer {
     public void consumeCouponIssuedEvent(CouponIssuedEvent event, Acknowledgment ack) {
         Coupon coupon = couponRepository.findById(event.getCouponId())
                 .orElseThrow(CouponNotFound::new);
-        IssuedCoupon issuedCoupon = IssuedCoupon.issue(event.getEmail(), coupon);
+        coupon.decrementQuantity();  //쿠폰 재고 감소
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(event.getEmail(), coupon);  //쿠폰 발급
+
+        couponRepository.save(coupon);
         issuedCouponRepository.save(issuedCoupon);
-        ack.acknowledge();
+
+        ack.acknowledge();  //수동 비동기 커밋
         couponLogger.info("쿠폰 발급됨 - 코드: {}, 사용자: {}", coupon.getCode(), event.getEmail());
     }
 
