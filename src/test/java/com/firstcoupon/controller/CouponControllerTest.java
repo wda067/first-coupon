@@ -54,7 +54,7 @@ class CouponControllerTest {
 
     @BeforeEach
     void setUp() {
-        Coupon coupon = Coupon.create("테스트 코드", 100, LocalDate.now().plusDays(7),
+        Coupon coupon = Coupon.create("테스트 쿠폰", 100, LocalDate.now().plusDays(7),
                 LocalDateTime.now(), LocalDateTime.now().plusDays(7));
         couponRepository.save(coupon);
         code = coupon.getCode();

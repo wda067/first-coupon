@@ -45,7 +45,7 @@ class AdminControllerTest {
     void 쿠폰을_생성한다() throws Exception {
         //given
         CouponCreate request = new CouponCreate(
-                "테스트 코드",
+                "테스트 쿠폰",
                 1000, LocalDate.now().plusDays(7),
                 LocalDateTime.now(),
                 LocalDateTime.now().plusDays(7));
@@ -61,7 +61,7 @@ class AdminControllerTest {
         //then
         Coupon coupon = couponRepository.findAll().get(0);
 
-        assertEquals("테스트 코드", coupon.getCouponName());
+        assertEquals("테스트 쿠폰", coupon.getCouponName());
         assertEquals(1000, coupon.getTotalQuantity());
         assertEquals(1L, couponRepository.count());
     }
@@ -71,7 +71,7 @@ class AdminControllerTest {
         //given
         LocalDateTime now = LocalDateTime.now();
         List<Coupon> coupons = IntStream.range(1, 11)
-                .mapToObj(i -> Coupon.create("테스트 코드" + i,
+                .mapToObj(i -> Coupon.create("테스트 쿠폰" + i,
                         100,
                         now.toLocalDate().plusDays(7),
                         now,
@@ -84,7 +84,7 @@ class AdminControllerTest {
         mockMvc.perform(get("/admin/coupons"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(10))
-                .andExpect(jsonPath("$[0].couponName").value("테스트 코드1"))
+                .andExpect(jsonPath("$[0].couponName").value("테스트 쿠폰1"))
                 .andExpect(jsonPath("$[0].totalQuantity").value(100))
                 .andDo(print());
 
