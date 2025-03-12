@@ -17,6 +17,8 @@ public class CouponResponse {
 
     private int totalQuantity;
 
+    private int remainingQuantity;
+
     private LocalDate expirationDate;
 
     private LocalDateTime issueStartTime;
@@ -27,6 +29,7 @@ public class CouponResponse {
         this.code = coupon.getCode();
         this.couponName = coupon.getCouponName();
         this.totalQuantity = coupon.getTotalQuantity();
+        this.remainingQuantity = coupon.getRemainingQuantity();
         this.expirationDate = coupon.getExpirationDate();
         this.issueStartTime = coupon.getIssueStartTime();
         this.issueEndTime = coupon.getIssueEndTime();
