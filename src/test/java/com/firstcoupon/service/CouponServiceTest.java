@@ -232,7 +232,7 @@ class CouponServiceTest {
 
         latch.await();
         executorService.shutdown();
-        Thread.sleep(10000);
+        Thread.sleep(2000);
 
         //then
         assertEquals(totalQuantity, issuedCouponRepository.count());
