@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    BAD_REQUEST("400", "잘못된 요청입니다."),
     COUPON_ALREADY_ISSUED("409", "이미 쿠폰을 발급받았습니다."),
     COUPON_ALREADY_USED("400", "이미 사용한 쿠폰입니다."),
     COUPON_ALREADY_EXISTS("409", "이미 존재하는 쿠폰입니다."),
