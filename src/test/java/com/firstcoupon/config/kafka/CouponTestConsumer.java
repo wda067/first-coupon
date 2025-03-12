@@ -21,7 +21,7 @@ public class CouponTestConsumer {
     private final IssuedCouponRepository issuedCouponRepository;
     private final CouponRepository couponRepository;
 
-    @KafkaListener(topics = "coupon-issued", groupId = "coupon-issued-group", containerFactory = "issuedKafkaListenerContainerFactory")
+    @KafkaListener(topics = "coupon-issued", groupId = "test-group-${random.uuid}", containerFactory = "issuedKafkaListenerContainerFactory")
     public void consumeCouponIssuedEvent(CouponIssuedEvent event, Acknowledgment ack) {
         Coupon coupon = couponRepository.findById(event.getCouponId())
                 .orElseThrow(CouponNotFound::new);

@@ -64,7 +64,7 @@ public class TestConsumerConfig {
         factory.setConsumerFactory(issuedConsumerFactory());
         factory.getContainerProperties().setAckMode(MANUAL_IMMEDIATE);
         factory.getContainerProperties().setAsyncAcks(true);
-        factory.setConcurrency(1);
+        factory.setConcurrency(3);
         return factory;
     }
 
@@ -74,7 +74,7 @@ public class TestConsumerConfig {
         factory.setConsumerFactory(usedConsumerFactory());
         factory.getContainerProperties().setAckMode(MANUAL_IMMEDIATE);
         factory.getContainerProperties().setAsyncAcks(true);
-        factory.setConcurrency(1);
+        factory.setConcurrency(3);
         return factory;
     }
 }

@@ -44,16 +44,16 @@ public class TestProducerConfig {
     @Bean
     public NewTopic couponIssuedTopic() {
         return TopicBuilder.name("coupon-issued")
-                .partitions(1)  //파티션 개수
-                .replicas(1)  //복제 개수 (테스트 환경에서는 1)
+                .partitions(3)
+                .replicas(1)
                 .build();
     }
 
     @Bean
     public NewTopic couponUsedTopic() {
         return TopicBuilder.name("coupon-used")
-                .partitions(1)  //파티션 개수
-                .replicas(1)  //복제 개수 (테스트 환경에서는 1)
+                .partitions(3)
+                .replicas(1)  
                 .build();
     }
 }
