@@ -17,13 +17,13 @@ public class ErrorResponse {
     private final ObjectNode body = new ObjectMapper().createObjectNode();
 
     public ErrorResponse(ErrorCode errorCode, List<FieldError> fieldErrors) {
-        this.code = errorCode.getCode();
+        this.code = errorCode.toString();
         this.message = errorCode.getMessage();
         fieldErrors.forEach(error -> this.body.put(error.getField(), error.getDefaultMessage()));
     }
 
     public ErrorResponse(ErrorCode errorCode) {
-        this.code = errorCode.getCode();
+        this.code = errorCode.toString();
         this.message = errorCode.getMessage();
     }
 
