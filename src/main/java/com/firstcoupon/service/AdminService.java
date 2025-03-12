@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ public class AdminService {
         LocalDateTime issueEndTime = request.getIssueEndTime();
 
         boolean exists = couponRepository.existsByCouponNameAndExpirationDate(request.getCouponName(), expirationDate);
-        if (exists) {  //같은 이름, 만료일의 쿠폰이 존재
+        if (exists) {  //같은 이름, 만료일의 쿠폰이 존재할 경우
             throw new CouponAlreadyExists();
         }
 
