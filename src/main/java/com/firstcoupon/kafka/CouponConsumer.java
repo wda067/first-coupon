@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -30,6 +31,7 @@ public class CouponConsumer {
     private final EmailService emailService;
 
     @KafkaListener(topics = "coupon-issued", groupId = "coupon-issued-group", containerFactory = "issuedKafkaListenerContainerFactory")
+    @Transactional
     public void consumeCouponIssuedEvent(CouponIssuedEvent event, Acknowledgment ack) {
         Coupon coupon = couponRepository.findById(event.getCouponId())
                 .orElseThrow(CouponNotFound::new);
