@@ -496,15 +496,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">POST /admin/coupon HTTP/1.1
 Content-Type: application/json
-Content-Length: 192
+Content-Length: 189
 Host: localhost:8080
 
 {
-  "couponName" : "테스트 코드",
+  "couponName" : "할인 쿠폰",
   "totalQuantity" : 1000,
-  "expirationDate" : "2025-03-19",
-  "issueStartTime" : "2025-03-12 20:51:12",
-  "issueEndTime" : "2025-03-19 20:51:12"
+  "expirationDate" : "2025-03-20",
+  "issueStartTime" : "2025-03-13 02:44:52",
+  "issueEndTime" : "2025-03-20 02:44:52"
 }</code></pre>
 </div>
 </div>
@@ -578,24 +578,24 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 538
+Content-Length: 532
 
 [ {
-  "code" : "4L08-8FJT-6M3J",
-  "couponName" : "테스트 코드1",
+  "code" : "7G07-L6M8-2BBM",
+  "couponName" : "할인 쿠폰1",
   "totalQuantity" : 100,
   "remainingQuantity" : 100,
-  "expirationDate" : "2025-03-19",
-  "issueStartTime" : "2025-03-12T20:51:12.798645",
-  "issueEndTime" : "2025-03-19T20:51:12.798645"
+  "expirationDate" : "2025-03-20",
+  "issueStartTime" : "2025-03-13T02:44:53.269714",
+  "issueEndTime" : "2025-03-20T02:44:53.269714"
 }, {
-  "code" : "G2EN-VD2R-8F79",
-  "couponName" : "테스트 코드2",
+  "code" : "ZXHN-H3VB-XINO",
+  "couponName" : "할인 쿠폰2",
   "totalQuantity" : 100,
   "remainingQuantity" : 100,
-  "expirationDate" : "2025-03-19",
-  "issueStartTime" : "2025-03-12T20:51:12.798645",
-  "issueEndTime" : "2025-03-19T20:51:12.798645"
+  "expirationDate" : "2025-03-20",
+  "issueStartTime" : "2025-03-13T02:44:53.269714",
+  "issueEndTime" : "2025-03-20T02:44:53.269714"
 } ]</code></pre>
 </div>
 </div>
@@ -666,7 +666,7 @@ Content-Length: 63
 Host: localhost:8080
 
 {
-  "code" : "FGWR-2Q67-42IX",
+  "code" : "5MQQ-ZZ1Z-YJEP",
   "email" : "test@test.com"
 }</code></pre>
 </div>
@@ -750,10 +750,10 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 74
+Content-Length: 90
 
 {
-  "code" : "400",
+  "code" : "COUPON_ALREADY_USED",
   "message" : "이미 사용한 쿠폰입니다."
 }</code></pre>
 </div>
@@ -806,10 +806,10 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 73
+Content-Length: 84
 
 {
-  "code" : "400",
+  "code" : "COUPON_EXPIRED",
   "message" : "쿠폰이 만료되었습니다."
 }</code></pre>
 </div>
