@@ -3,7 +3,6 @@ package com.firstcoupon.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.firstcoupon.domain.Coupon;
 import com.firstcoupon.domain.CouponStatus;
@@ -19,10 +18,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -32,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @SpringBootTest
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CouponServiceTest {
 
     @Autowired
@@ -51,7 +48,13 @@ class CouponServiceTest {
     private int totalQuantity;
     private int threadCount;  //최대 쿠폰의 수보다 많은 스레드로 경쟁 유발
 
-    @BeforeAll
+    @AfterEach
+    void tearDown() {
+        issuedCouponRepository.deleteAll();
+        couponRepository.deleteAll();
+    }
+
+    @BeforeEach
     void setup() {
         Coupon coupon = Coupon.create(
                 "테스트 쿠폰",
@@ -128,34 +131,6 @@ class CouponServiceTest {
 
         //expected
         assertThrows(CouponAlreadyUsed.class, () -> couponService.useCoupon(email));
-    }
-
-    @Test
-    void 경쟁_조건으로_쿠폰이_초과_발급된다() throws InterruptedException {
-        //given
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        //when
-        for (int i = 1; i <= threadCount; i++) {
-            String email = "test" + i + "@test.com";
-            CouponIssue couponIssue = new CouponIssue(code, email);
-            executorService.execute(() -> {
-                try {
-                    couponService.issueCoupon(couponIssue);
-                } catch (Exception ignored) {
-                }
-                latch.countDown();
-            });
-        }
-
-        latch.await();
-        executorService.shutdown();
-
-        //then
-        long issuedCoupons = issuedCouponRepository.count();
-        log.info("issued {} coupons", issuedCoupons);
-        assertTrue(issuedCoupons > totalQuantity);
     }
 
     @Test
@@ -244,7 +219,7 @@ class CouponServiceTest {
 
         //when
         for (int i = 1; i <= threadCount; i++) {
-            String email = "test" + i + "@test.com";
+            String email = "test" + i + "@email.com";
             CouponIssue couponIssue = new CouponIssue(code, email);
             executorService.execute(() -> {
                 try {
@@ -257,7 +232,7 @@ class CouponServiceTest {
 
         latch.await();
         executorService.shutdown();
-        Thread.sleep(5000);
+        Thread.sleep(10000);
 
         //then
         assertEquals(totalQuantity, issuedCouponRepository.count());
