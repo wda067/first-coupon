@@ -46,6 +46,9 @@
 ## 📅ERD
 ![Image](https://github.com/user-attachments/assets/cf557a0a-d7fb-42a0-9bd9-adc1b8272004)
 
+- **coupon**: 쿠폰의 기본 정보와 생성 시 정의되는 속성을 저장합니다.
+- **issued_coupon**: 사용자에게 발급된 개별 쿠폰의 상태와 정보를 저장합니다.
+
 ## 〰️쿠폰 발급 및 관리 Flow
 ![Image](https://github.com/user-attachments/assets/e5c3cad0-2672-498c-921e-628eca8bdf48)
 
