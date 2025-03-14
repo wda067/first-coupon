@@ -1,9 +1,11 @@
 package com.firstcoupon.config.kafka;
 
+import static org.apache.kafka.clients.consumer.ConsumerConfig.*;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG;
+import static org.apache.kafka.clients.consumer.ConsumerConfig.MAX_POLL_RECORDS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG;
 import static org.springframework.kafka.listener.ContainerProperties.AckMode.MANUAL_IMMEDIATE;
 import static org.springframework.kafka.support.serializer.JsonDeserializer.*;
@@ -13,6 +15,7 @@ import com.firstcoupon.domain.CouponIssuedEvent;
 import com.firstcoupon.domain.CouponUsedEvent;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +38,9 @@ public class TestConsumerConfig {
         config.put(TRUSTED_PACKAGES, "*");
         config.put(ENABLE_AUTO_COMMIT_CONFIG, "false");
         config.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put(MAX_POLL_RECORDS_CONFIG, 1000);  //한 번에 가져올 레코드의 최대 개수
+        config.put(FETCH_MIN_BYTES_CONFIG, 1024);  //한 번에 가져올 데이터의 크기
+        config.put(FETCH_MAX_WAIT_MS_CONFIG, 2000);  //fetch.min.bytes보다 데이터 크기가 적은 경우 최대 대기 시간
         config.put(VALUE_DEFAULT_TYPE, CouponIssuedEvent.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(config,
@@ -65,6 +71,7 @@ public class TestConsumerConfig {
         factory.getContainerProperties().setAckMode(MANUAL_IMMEDIATE);
         factory.getContainerProperties().setAsyncAcks(true);
         factory.setConcurrency(3);
+        factory.setBatchListener(true);
         return factory;
     }
 
