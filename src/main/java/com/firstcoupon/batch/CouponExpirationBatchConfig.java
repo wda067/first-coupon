@@ -72,10 +72,10 @@ public class CouponExpirationBatchConfig {
                 .queryProvider(new MySqlPagingQueryProvider() {{
                     setSelectClause("SELECT ic.email, c.coupon_name, c.expiration_date");
                     setFromClause("FROM issued_coupon ic JOIN coupon c ON ic.coupon_id = c.id");
-                    setWhereClause("WHERE c.expiration_date = :targetDate AND ic.status = 'ISSUED'");
+                    setWhereClause("WHERE c.expiration_date = DATE(DATE_ADD(CONVERT_TZ(NOW(), 'UTC', 'Asia/Seoul'), INTERVAL 7 DAY)) "
+                            + "AND ic.status = 'ISSUED'");
                     setSortKeys(Collections.singletonMap("ic.email", Order.ASCENDING));
                 }})
-                .parameterValues(Collections.singletonMap("targetDate", LocalDate.of(2025, 3, 31)))
                 .build();
     }
 
