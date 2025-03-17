@@ -1,15 +1,19 @@
 package com.firstcoupon.domain;
 
 import com.firstcoupon.utils.CouponCodeGenerator;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,6 +36,9 @@ public class Coupon {
     private String code;
 
     private String couponName;
+
+    @OneToMany(mappedBy = "coupon", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<IssuedCoupon> issuedCoupons = new ArrayList<>();
 
     private int totalQuantity;
 
@@ -81,5 +88,10 @@ public class Coupon {
         if (remainingQuantity > 0) {
             remainingQuantity--;
         }
+    }
+
+    public void addIssuedCoupon(IssuedCoupon issuedCoupon) {
+        issuedCoupons.add(issuedCoupon);
+        issuedCoupon.setCoupon(this);
     }
 }
