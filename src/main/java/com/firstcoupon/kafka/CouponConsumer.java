@@ -37,6 +37,7 @@ public class CouponConsumer {
                 .orElseThrow(CouponNotFound::new);
         coupon.decrementQuantity();  //쿠폰 재고 감소
         IssuedCoupon issuedCoupon = IssuedCoupon.issue(event.getEmail(), coupon);  //쿠폰 발급
+        coupon.addIssuedCoupon(issuedCoupon);
 
         couponRepository.save(coupon);
         issuedCouponRepository.save(issuedCoupon);
