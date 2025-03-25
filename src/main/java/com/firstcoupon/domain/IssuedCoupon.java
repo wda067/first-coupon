@@ -77,4 +77,9 @@ public class IssuedCoupon {
     public boolean isUsed() {
         return this.status == CouponStatus.USED;
     }
+
+    public void setCoupon(Coupon coupon) {
+        this.coupon = coupon;
+        coupon.getIssuedCoupons().add(this);
+    }
 }
