@@ -41,7 +41,7 @@
 ![Image](https://github.com/user-attachments/assets/42416148-0def-4d55-9f21-b501eeeba2ff)
 
 ## 📃API 문서
-[🔗 REST API Documentation](https://wda067.github.io/first-coupon/)
+🔗 [REST API Documentation](https://wda067.github.io/first-coupon/)
 
 ## 📅ERD
 ![Image](https://github.com/user-attachments/assets/cf557a0a-d7fb-42a0-9bd9-adc1b8272004)
@@ -53,8 +53,8 @@
 
 ### 1. 쿠폰 발급 동시성 문제
 - 문제: 다수의 사용자가 동시에 쿠폰을 신청할 때, 동시성 문제가 발생함.
-- 해결: [🔗 동시성 제어 및 성능 개선 (feat. Redis, Kafka)](https://velog.io/@wda067/%EC%84%A0%EC%B0%A9%EC%88%9C-%EC%BF%A0%ED%8F%B0-%EB%B0%9C%EA%B8%89-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8)
+- 해결: 🔗 [동시성 제어 및 성능 개선 (feat. Redis, Kafka)](https://velog.io/@wda067/%EC%84%A0%EC%B0%A9%EC%88%9C-%EC%BF%A0%ED%8F%B0-%EB%B0%9C%EA%B8%89-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8)
 
 ### 2. 독립적인 테스트 환경
 - 문제: 개발 환경에서 Redis와 Kafka의 외부 의존성으로 인해 독립적인 단위 테스트가 어려움.
-- 해결: [🔗 Testcontainers로 테스트 환경 구축](https://velog.io/@wda067/Docker-Testcontainers%EB%A1%9C-%ED%85%8C%EC%8A%A4%ED%8A%B8-%ED%99%98%EA%B2%BD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
+- 해결: 🔗 [Testcontainers로 테스트 환경 구축](https://velog.io/@wda067/Docker-Testcontainers%EB%A1%9C-%ED%85%8C%EC%8A%A4%ED%8A%B8-%ED%99%98%EA%B2%BD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
