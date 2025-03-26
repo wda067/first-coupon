@@ -63,7 +63,7 @@ public class CouponConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, CouponIssuedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(issuedConsumerFactory());
         factory.getContainerProperties().setAckMode(MANUAL_IMMEDIATE);
-        factory.getContainerProperties().setAsyncAcks(true);
+        factory.getContainerProperties().setAsyncAcks(false);  //비동기 커밋 비활성화
         factory.setConcurrency(3);
         return factory;
     }
