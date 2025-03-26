@@ -38,7 +38,7 @@ public class Coupon {
     private String couponName;
 
     @OneToMany(mappedBy = "coupon", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<IssuedCoupon> issuedCoupons = new ArrayList<>();
+    private final List<IssuedCoupon> issuedCoupons = new ArrayList<>();
 
     private int totalQuantity;
 
@@ -88,10 +88,5 @@ public class Coupon {
         if (remainingQuantity > 0) {
             remainingQuantity--;
         }
-    }
-
-    public void addIssuedCoupon(IssuedCoupon issuedCoupon) {
-        issuedCoupons.add(issuedCoupon);
-        issuedCoupon.setCoupon(this);
     }
 }

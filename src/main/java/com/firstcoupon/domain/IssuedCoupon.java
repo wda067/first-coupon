@@ -54,11 +54,14 @@ public class IssuedCoupon {
     }
 
     public static IssuedCoupon issue(String email, Coupon coupon) {
-        return IssuedCoupon.builder()
+        IssuedCoupon issuedCoupon = IssuedCoupon.builder()
                 .email(email)
                 .coupon(coupon)
                 .status(CouponStatus.ISSUED)
                 .build();
+
+        coupon.getIssuedCoupons().add(issuedCoupon);  //양방향 연관관계 설정
+        return issuedCoupon;
     }
 
     public void expire() {
@@ -76,10 +79,5 @@ public class IssuedCoupon {
 
     public boolean isUsed() {
         return this.status == CouponStatus.USED;
-    }
-
-    public void setCoupon(Coupon coupon) {
-        this.coupon = coupon;
-        coupon.getIssuedCoupons().add(this);
     }
 }
