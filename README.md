@@ -38,13 +38,15 @@
 </p>
 
 ## 🏗️시스템 아키텍처
-![Image](https://github.com/user-attachments/assets/42416148-0def-4d55-9f21-b501eeeba2ff)
+
+<img src="https://github.com/user-attachments/assets/42416148-0def-4d55-9f21-b501eeeba2ff" width="50%" height="50%" />
 
 ## 📃API 문서
 🔗 [REST API Documentation](https://wda067.github.io/first-coupon/)
 
 ## 📅ERD
-![Image](https://github.com/user-attachments/assets/cf557a0a-d7fb-42a0-9bd9-adc1b8272004)
+
+<img src="https://github.com/user-attachments/assets/cf557a0a-d7fb-42a0-9bd9-adc1b8272004" width="50%" height="50%" />
 
 - **coupon**: 쿠폰의 기본 정보와 생성 시 정의되는 속성을 저장합니다.
 - **issued_coupon**: 사용자에게 발급된 개별 쿠폰의 상태와 정보를 저장합니다.
