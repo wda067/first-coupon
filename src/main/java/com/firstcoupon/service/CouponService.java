@@ -63,16 +63,21 @@ public class CouponService {
             throw new NotIssuableTime();
         }
 
-        int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
-        long issuedCount = issuedCouponRepository.count();  //현재 발급된 쿠폰 수량
-
-        if (issuedCount >= totalQuantity) {  //재고가 없을 경우
+        int remainingQuantity = coupon.getRemainingQuantity();
+        if (remainingQuantity <= 0) {
             throw new CouponSoldOut();
         }
+        //int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
+        //long issuedCount = issuedCouponRepository.count();  //현재 발급된 쿠폰 수량
+        //
+        //if (issuedCount >= totalQuantity) {  //재고가 없을 경우
+        //    throw new CouponSoldOut();
+        //}
 
         coupon.decrementQuantity();  //쿠폰 재고 감소
         IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
-        coupon.addIssuedCoupon(issuedCoupon);  //양방향 연관관계 설정
+        //coupon.addIssuedCoupon(issuedCoupon);  //양방향 연관관계 설정
+        issuedCoupon.setCoupon(coupon);
 
         issuedCouponRepository.save(issuedCoupon);
     }
@@ -101,7 +106,6 @@ public class CouponService {
 
         coupon.decrementQuantity();  //쿠폰 재고 감소
         IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
-        coupon.addIssuedCoupon(issuedCoupon);  //양방향 연관관계 설정
 
         issuedCouponRepository.save(issuedCoupon);
     }
@@ -146,7 +150,7 @@ public class CouponService {
         try {
             coupon.decrementQuantity();  //쿠폰 재고 감소
             IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
-            coupon.addIssuedCoupon(issuedCoupon);  //양방향 연관관계 설정
+            issuedCoupon.setCoupon(coupon);
 
             issuedCouponRepository.save(issuedCoupon);
         } catch (Exception e) {  //쿠폰 발급 실패시 롤백
@@ -155,41 +159,6 @@ public class CouponService {
             throw new CouponError();
         }
     }
-
-    //@Transactional
-    //public void issueCouponWithRedis2(CouponIssue request) {
-    //    String userKey = COUPON_USER_KEY_PREFIX + request.getCode() + ":" + request.getEmail();
-    //    String countKey = COUPON_COUNT_KEY_PREFIX + request.getCode();
-    //    Coupon coupon = couponRepository.findByCode(request.getCode())
-    //            .orElseThrow(InvalidCouponCode::new);
-    //    long duration = coupon.getDuration();  //쿠폰 사용 기간
-    //
-    //    Boolean canIssue = redisTemplate.opsForValue().setIfAbsent(userKey, "issued", duration, TimeUnit.SECONDS);
-    //    if (Boolean.FALSE.equals(canIssue)) {  //이미 발급받은 사용자일 경우
-    //        throw new CouponAlreadyIssued();
-    //    }
-    //
-    //    int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
-    //    Long currentCount = redisTemplate.opsForValue().increment(countKey);  //현재 발급된 쿠폰 수량
-    //    redisTemplate.expire(countKey, duration, TimeUnit.SECONDS);
-    //
-    //    if (currentCount > totalQuantity) {  //총 재고를 초과했을 경우
-    //        redisTemplate.delete(userKey);
-    //        redisTemplate.opsForValue().decrement(countKey);
-    //        throw new CouponSoldOut();
-    //    }
-    //
-    //    try {
-    //        coupon.decrementQuantity();  //쿠폰 재고 감소
-    //        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
-    //        coupon.addIssuedCoupon(issuedCoupon);  //양방향 연관관계 설정
-    //
-    //        issuedCouponRepository.save(issuedCoupon);
-    //    } catch (Exception e) {  //쿠폰 발급 실패시 롤백
-    //        redisTemplate.delete(userKey);
-    //        throw new CouponError();
-    //    }
-    //}
 
     @Transactional
     public void issueCouponWithRedisson(CouponIssue request) {

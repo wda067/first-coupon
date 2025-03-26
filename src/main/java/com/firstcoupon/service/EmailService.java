@@ -1,6 +1,5 @@
 package com.firstcoupon.service;
 
-import com.firstcoupon.domain.Coupon;
 import com.firstcoupon.exception.EmailSendFailure;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -53,7 +52,6 @@ public class EmailService {
         }
     }
 
-    @Async
     @Retryable(
             retryFor = {EmailSendFailure.class},
             backoff = @Backoff(delay = 2000)
