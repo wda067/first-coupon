@@ -52,7 +52,7 @@ class AdminControllerTest {
         String json = objectMapper.writeValueAsString(request);
 
         //when
-        mockMvc.perform(post("/admin/coupon")
+        mockMvc.perform(post("/api/admin/coupon")
                         .contentType(APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -81,7 +81,7 @@ class AdminControllerTest {
         couponRepository.saveAll(coupons);
 
         //expected
-        mockMvc.perform(get("/admin/coupons"))
+        mockMvc.perform(get("/api/admin/coupons"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(10))
                 .andExpect(jsonPath("$[0].couponName").value("테스트 쿠폰1"))

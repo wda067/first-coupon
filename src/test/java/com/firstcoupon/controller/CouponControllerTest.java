@@ -69,7 +69,7 @@ class CouponControllerTest {
         String json = objectMapper.writeValueAsString(request);
 
         //when
-        mockMvc.perform(post("/coupon/issue")
+        mockMvc.perform(post("/api/coupon/issue")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -95,7 +95,7 @@ class CouponControllerTest {
         issuedCouponRepository.save(issuedCoupon);
 
         //when
-        mockMvc.perform(post("/coupon/use")
+        mockMvc.perform(post("/api/coupon/use")
                         .param("email", email))
                 .andExpect(status().isOk())
                 .andDo(print());
@@ -112,12 +112,12 @@ class CouponControllerTest {
         IssuedCoupon issuedCoupon = IssuedCoupon.issue(email, coupon);
         issuedCouponRepository.save(issuedCoupon);
 
-        mockMvc.perform(post("/coupon/use")
+        mockMvc.perform(post("/api/coupon/use")
                         .param("email", email))
                 .andExpect(status().isOk());
 
         //expected
-        mockMvc.perform(post("/coupon/use")
+        mockMvc.perform(post("/api/coupon/use")
                         .param("email", email))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("COUPON_ALREADY_USED"))
