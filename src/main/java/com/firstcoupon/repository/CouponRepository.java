@@ -20,7 +20,7 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     @Query("SELECT c FROM Coupon c WHERE c.code = :code")
     Optional<Coupon> findByCodeForUpdate(@Param("code") String code);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Coupon c SET c.remainingQuantity = c.remainingQuantity - 1 WHERE c.id = :couponId AND c.remainingQuantity > 0")
     void decrementQuantity(@Param("couponId") Long couponId);
 }
