@@ -46,7 +46,7 @@
 
 ## 📅ERD
 
-<img src="https://github.com/user-attachments/assets/cf557a0a-d7fb-42a0-9bd9-adc1b8272004" width="60%" height="60%" />
+<img src="https://github.com/user-attachments/assets/b49155d1-4504-4686-bb10-2cbb2ff966a8" width="60%" height="60%" />
 
 - **coupon**: 쿠폰의 기본 정보와 생성 시 정의되는 속성을 저장합니다.
 - **issued_coupon**: 사용자에게 발급된 개별 쿠폰의 상태와 정보를 저장합니다.
