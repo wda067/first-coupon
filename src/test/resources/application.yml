@@ -5,11 +5,11 @@ spring:
     password:
     driver-class-name: org.h2.Driver
 
-  data:
-    redis:
-      host: localhost
-      port: 6380
-      password: 1234
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6380
+#      password: 1234
 
   jpa:
     properties:
@@ -18,6 +18,8 @@ spring:
           batch_size: 1000
           batch_versioned_data: true
         order_updates: true
+    hibernate:
+      ddl-auto: create-drop
 #        format_sql: true
 #        show_sql: true
 #

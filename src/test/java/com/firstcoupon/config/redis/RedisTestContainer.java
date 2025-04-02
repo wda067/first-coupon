@@ -2,20 +2,27 @@ package com.firstcoupon.config.redis;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.testcontainers.containers.FixedHostPortGenericContainer;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 @Configuration
+@Testcontainers
 @Profile("test")
 public class RedisTestContainer {
 
-    private static final FixedHostPortGenericContainer<?> REDIS_CONTAINER;
-    private static final String REDIS_IMAGE = "redis:alpine";
+    @Container
+    private static final GenericContainer<?> REDIS_CONTAINER =
+            new GenericContainer<>(DockerImageName.parse("redis:latest"))
+                    .withExposedPorts(6379);
 
-    static {
-        REDIS_CONTAINER = new FixedHostPortGenericContainer<>(DockerImageName.parse(REDIS_IMAGE).toString())
-                .withFixedExposedPort(6380, 6379)  //호스트 6380 -> 컨테이너 6379
-                .withCommand("redis-server", "--requirepass", "1234");
+    @DynamicPropertySource
+    public static void registerRedisProperties(DynamicPropertyRegistry registry) {
         REDIS_CONTAINER.start();
+        registry.add("spring.data.redis.host", REDIS_CONTAINER::getHost);
+        registry.add("spring.data.redis.port", () -> REDIS_CONTAINER.getMappedPort(6379));
     }
 }
