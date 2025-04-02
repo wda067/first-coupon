@@ -19,7 +19,7 @@ public class RedissonConfig {
     public RedissonClient redisson() {
         Config config = new Config();
         config.useSingleServer()
-                .setAddress("redis://" + properties.getHost() + ":6379")
+                .setAddress("redis://" + properties.getHost() + ":" + properties.getPort())
                 .setPassword(properties.getPassword());
 
         return Redisson.create(config);
