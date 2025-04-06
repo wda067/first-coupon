@@ -35,6 +35,8 @@
   <img src="https://img.shields.io/badge/kafka-232F3E?style=for-the-badge&logo=apache-kafka&logoColor=white" />
   <!-- Docker -->
   <img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" />
+  <!-- Nginx -->
+  <img src="https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white" />
 </p>
 
 ## 🏗️시스템 아키텍처
