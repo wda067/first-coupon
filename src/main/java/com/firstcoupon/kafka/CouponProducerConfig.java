@@ -9,7 +9,9 @@ import static org.springframework.kafka.support.serializer.JsonSerializer.ADD_TY
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -24,11 +26,11 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 public class CouponProducerConfig {
 
     @Bean
-    public ProducerFactory<String, Object> producerFactory() {
-        Map<String, Object> config = new HashMap<>();
-        config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
-        config.put(KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+    public ProducerFactory<String, Object> producerFactory(KafkaProperties properties) {
+        Map<String, Object> config = new HashMap<>(properties.buildProducerProperties());
+
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         config.put(ADD_TYPE_INFO_HEADERS, false);
         config.put(ENABLE_IDEMPOTENCE_CONFIG, true);
 
@@ -36,8 +38,8 @@ public class CouponProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
 
     @Bean
