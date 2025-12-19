@@ -37,3 +37,8 @@ out/
 .vscode/
 /http/
 /nginx/
+/terraform.tfvars
+/coupon-key
+/coupon-key.pem
+/coupon-key.pub
+/variables.tf
