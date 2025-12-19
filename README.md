@@ -41,7 +41,7 @@
 
 ## 🏗️시스템 아키텍처
 
-<img src="https://github.com/user-attachments/assets/b49155d1-4504-4686-bb10-2cbb2ff966a8" width="60%" height="60%" />
+<img src="https://github.com/user-attachments/assets/1a763ad8-e5b2-4d5f-bca5-f3c6683a58be" width="60%" height="60%" />
 
 ## 📃API 문서
 🔗 [REST API Documentation](https://wda067.github.io/first-coupon/)
