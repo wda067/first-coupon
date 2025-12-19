@@ -1,9 +1,9 @@
 spring:
   datasource:
     hikari:
-      jdbc-url: jdbc:mysql://localhost:3306/mydb
-      username: myuser
-      password: mypassword
+      jdbc-url: jdbc:mysql://${RDS_ENDPOINT:localhost}:3306/${DB_NAME:mydb}?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+      username: ${DB_USERNAME:coupon_user}
+      password: ${RDS_PASSWORD:mypassword}
       driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -20,10 +20,29 @@ spring:
     job:
       enabled: false
     jdbc:
-      initialize-schema: always
+      initialize-schema: never
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: 1234
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:1234}
+      ssl:
+        enabled: ${REDIS_SSL:false}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092,localhost:9093,localhost:9094}
+
+    consumer:
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+
+    producer:
+      properties:
+        enable.idempotence: true
+
+    properties:
+      # JsonDeserializer에서 패키지 신뢰
+      spring.json.trusted.packages: "*"
+      # ADD_TYPE_INFO_HEADERS 끄고 싶으면 아래 방식 권장(스프링 방식)
+      spring.json.add.type.headers: false
