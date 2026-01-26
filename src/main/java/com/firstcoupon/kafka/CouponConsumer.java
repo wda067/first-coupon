@@ -24,17 +24,41 @@ public class CouponConsumer {
     private final EmailService emailService;
     private final CouponIssueService couponIssueService;
 
-    @KafkaListener(topics = "coupon-issued", groupId = "coupon-issued-group", containerFactory = "issuedKafkaListenerContainerFactory")
+    @KafkaListener(
+            topics = "coupon-issued",
+            groupId = "coupon-issued-group",
+            containerFactory = "issuedKafkaListenerContainerFactory"
+    )
     public void consumeCouponIssuedEvent(CouponIssuedEvent event, Acknowledgment ack) {
-      try {
-          couponIssueService.handleCouponIssued(event);
-          ack.acknowledge();  //수동 동기 커밋
-      }catch (Exception e){
-          couponLogger.error("쿠폰 발급 처리 중 오류 발생, 이벤트 재처리 예정", e);
-      }
+        couponLogger.info("카프카 시작");
+        try {
+            log.info("쿠폰 발급 시도: email={}, couponId={}", event.getEmail(), event.getCouponId());
+            couponIssueService.handleCouponIssued(event);
+            ack.acknowledge();  // 수동 동기 커밋
+        } catch (Exception e) {
+            couponLogger.error("쿠폰 발급 처리 중 오류 발생, 이벤트 재처리 예정", e);
+            throw e;
+        }
     }
 
-    @KafkaListener(topics = "coupon-used", groupId = "coupon-used-group", containerFactory = "usedKafkaListenerContainerFactory")
+    // @KafkaListener(
+    //         topics = "coupon-issued-dlq",
+    //         groupId = "coupon-issued-dlq-group"
+    // )
+    // public void consumeDlq(CouponIssuedEvent event, Acknowledgment ack) {
+    //     try {
+    //         couponIssueService.handleCouponIssued(event);
+    //         ack.acknowledge();
+    //     } catch (Exception e) {
+    //         couponLogger.error("DLQ 재처리 실패", e);
+    //     }
+    // }
+
+    @KafkaListener(
+            topics = "coupon-used",
+            groupId = "coupon-used-group",
+            containerFactory = "usedKafkaListenerContainerFactory"
+    )
     public void consumeCouponIssuedEvent(CouponUsedEvent event, Acknowledgment ack) {
         emailService.sendCouponUsedEmail(event.getEmail(), event.getCouponName());
         ack.acknowledge();

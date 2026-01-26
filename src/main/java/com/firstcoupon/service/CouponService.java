@@ -51,7 +51,40 @@ public class CouponService {
     @Transactional
     public void issueCoupon(CouponIssue request) {
         boolean isAlreadyIssued = issuedCouponRepository.findByEmail(request.getEmail()).isPresent();
-        if (isAlreadyIssued) {  //이미 쿠폰을 발급받은 회원일 경우
+        if (isAlreadyIssued) {  // 이미 쿠폰을 발급받은 회원일 경우
+            throw new CouponAlreadyIssued();
+        }
+
+        Coupon coupon = couponRepository.findByCode(request.getCode())
+                .orElseThrow(InvalidCouponCode::new);
+
+        boolean isNotIssuable = !coupon.isIssuable();
+        if (isNotIssuable) {  // 현재 시간이 발급 제한 시간일 때
+            throw new NotIssuableTime();
+        }
+
+        // int remainingQuantity = coupon.getRemainingQuantity();
+        // if (remainingQuantity <= 0) {
+        //     throw new CouponSoldOut();
+        // }
+
+        int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
+        long issuedCount = issuedCouponRepository.count();  //현재 발급된 쿠폰 수량
+
+        if (issuedCount >= totalQuantity) {  //재고가 없을 경우
+           throw new CouponSoldOut();
+        }
+
+        // coupon.decrementQuantity();  //쿠폰 재고 감소
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
+
+        issuedCouponRepository.save(issuedCoupon);
+    }
+
+    @Transactional
+    public void issueCouponWithSynchronized(CouponIssue request) {
+        boolean isAlreadyIssued = issuedCouponRepository.findByEmail(request.getEmail()).isPresent();
+        if (isAlreadyIssued) {  // 이미 쿠폰을 발급받은 회원일 경우
             throw new CouponAlreadyIssued();
         }
 
@@ -63,50 +96,46 @@ public class CouponService {
             throw new NotIssuableTime();
         }
 
-        int remainingQuantity = coupon.getRemainingQuantity();
-        if (remainingQuantity <= 0) {
+        // int remainingQuantity = coupon.getRemainingQuantity();
+        // if (remainingQuantity <= 0) {
+        //     throw new CouponSoldOut();
+        // }
+
+        int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
+        long issuedCount = issuedCouponRepository.countByCouponId(coupon.getId());  //현재 발급된 쿠폰 수량
+        if (issuedCount >= totalQuantity) {  //재고가 없을 경우
             throw new CouponSoldOut();
         }
-        //int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
-        //long issuedCount = issuedCouponRepository.count();  //현재 발급된 쿠폰 수량
-        //
-        //if (issuedCount >= totalQuantity) {  //재고가 없을 경우
-        //    throw new CouponSoldOut();
-        //}
 
-        coupon.decrementQuantity();  //쿠폰 재고 감소
-        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
-        //coupon.addIssuedCoupon(issuedCoupon);  //양방향 연관관계 설정
-        issuedCoupon.setCoupon(coupon);
-
+        // coupon.decrementQuantity();
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  // 쿠폰 발급
         issuedCouponRepository.save(issuedCoupon);
     }
 
     @Transactional
-    public synchronized void issueCouponWithSynchronized(CouponIssue request) {
+    public void issueCouponWithPessimisticWrite(CouponIssue request) {
         boolean isAlreadyIssued = issuedCouponRepository.findByEmail(request.getEmail()).isPresent();
-        if (isAlreadyIssued) {  //이미 쿠폰을 발급받은 회원일 경우
+        if (isAlreadyIssued) {  // 이미 쿠폰을 발급받은 회원일 경우
             throw new CouponAlreadyIssued();
         }
 
+        // Coupon coupon = couponRepository.findByCode(request.getCode())
+        //         .orElseThrow(InvalidCouponCode::new);
         Coupon coupon = couponRepository.findByCodeForUpdate(request.getCode())
-                .orElseThrow(InvalidCouponCode::new);  //쿠폰 조회에 비관적 락 적용
+                .orElseThrow(InvalidCouponCode::new);  // 쿠폰 조회에 비관적 락 적용
 
         boolean isNotIssuable = !coupon.isIssuable();
         if (isNotIssuable) {  //현재 시간이 발급 제한 시간일 때
             throw new NotIssuableTime();
         }
 
-        int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
-        long issuedCount = issuedCouponRepository.count();  //현재 발급된 쿠폰 수량
-
-        if (issuedCount >= totalQuantity) {  //재고가 없을 경우
+        int remainingQuantity = coupon.getRemainingQuantity();
+        if (remainingQuantity <= 0) {
             throw new CouponSoldOut();
         }
 
-        coupon.decrementQuantity();  //쿠폰 재고 감소
-        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
-
+        coupon.decrementQuantity();
+        IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  // 쿠폰 발급
         issuedCouponRepository.save(issuedCoupon);
     }
 
@@ -120,20 +149,35 @@ public class CouponService {
         long duration = coupon.getDuration();  //쿠폰 사용 기간
         int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
 
-        //Lua 스크립트 정의
+/*
+        Lua 스크립트 정의
+        return value
+        -1: 이미 쿠폰을 발급받은 사용자
+         0: 쿠폰 재고 소진
+         1: 쿠폰 발급 성공
+
+        KEYS[1]: userKey (쿠폰 코드 + 사용자 식별자)
+        KEYS[2]: countKey (쿠폰별 발급 수량 카운트)
+        ARGV[1]: totalQuantity (총 발급 수량)
+        ARGV[2]: duration (중복 발급 방지 TTL)
+         */
         String luaScript = """
+                -- 중복 쿠폰 발급 검증
                 if redis.call('EXISTS', KEYS[1]) == 1 then
                     return -1
                 end
-                local currentCount = redis.call('GET', KEYS[2]) or "0"
-                if tonumber(currentCount) >= tonumber(ARGV[1]) then
+                
+                -- 쿠폰 발급 수량 체크
+                local next = redis.call('INCR', KEYS[2])
+                if tonumber(next) > tonumber(ARGV[1]) then
+                    redis.call('DECR', KEYS[2]);    -- 롤백
                     return 0
                 end
-                redis.call('INCR', KEYS[2])
+                
+                -- 사용자 발급 여부 저장
                 redis.call('SET', KEYS[1], 'issued', 'EX', ARGV[2])
                 return 1
                 """;
-
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
         script.setScriptText(luaScript);
         script.setResultType(Long.class);
@@ -141,19 +185,16 @@ public class CouponService {
         List<String> keys = Arrays.asList(userKey, countKey);
         long result = redisTemplate.execute(script, keys, String.valueOf(totalQuantity), String.valueOf(duration));
 
-        if (result == -1) {  //이미 발급받은 사용자일 경우
+        if (result == -1) {  // 이미 발급받은 사용자일 경우
             throw new CouponAlreadyIssued();
-        } else if (result == 0) {  //재고가 없을 경우
+        } else if (result == 0) {  // 재고가 없을 경우
             throw new CouponSoldOut();
         }
 
         try {
-            coupon.decrementQuantity();  //쿠폰 재고 감소
-            IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  //쿠폰 발급
-            issuedCoupon.setCoupon(coupon);
-
+            IssuedCoupon issuedCoupon = IssuedCoupon.issue(request.getEmail(), coupon);  // 쿠폰 발급
             issuedCouponRepository.save(issuedCoupon);
-        } catch (Exception e) {  //쿠폰 발급 실패시 롤백
+        } catch (Exception e) {  // 쿠폰 발급 실패시 롤백
             redisTemplate.opsForValue().decrement(countKey);
             redisTemplate.delete(userKey);
             throw new CouponError();
@@ -205,16 +246,32 @@ public class CouponService {
         long duration = coupon.getDuration();  //쿠폰 사용 기간
         int totalQuantity = coupon.getTotalQuantity();  //총 쿠폰 발급 수량
 
-        //Lua 스크립트 정의
+        /*
+        Lua 스크립트 정의
+        return value
+        -1: 이미 쿠폰을 발급받은 사용자
+         0: 쿠폰 재고 소진
+         1: 쿠폰 발급 성공
+
+        KEYS[1]: userKey (쿠폰 코드 + 사용자 식별자)
+        KEYS[2]: countKey (쿠폰별 발급 수량 카운트)
+        ARGV[1]: totalQuantity (총 발급 수량)
+        ARGV[2]: duration (중복 발급 방지 TTL)
+         */
         String luaScript = """
+                -- 중복 쿠폰 발급 검증
                 if redis.call('EXISTS', KEYS[1]) == 1 then
                     return -1
                 end
-                local currentCount = redis.call('GET', KEYS[2]) or "0"
-                if tonumber(currentCount) >= tonumber(ARGV[1]) then
+                
+                -- 쿠폰 발급 수량 체크
+                local next = redis.call('INCR', KEYS[2])
+                if tonumber(next) > tonumber(ARGV[1]) then
+                    redis.call('DECR', KEYS[2]);    -- 롤백
                     return 0
                 end
-                redis.call('INCR', KEYS[2])
+                
+                -- 사용자 발급 여부 저장
                 redis.call('SET', KEYS[1], 'issued', 'EX', ARGV[2])
                 return 1
                 """;
@@ -227,8 +284,10 @@ public class CouponService {
         long result = redisTemplate.execute(script, keys, String.valueOf(totalQuantity), String.valueOf(duration));
 
         if (result == -1) {  //이미 발급받은 사용자일 경우
+            log.error("이미 발급받은 사용자입니다.");
             throw new CouponAlreadyIssued();
         } else if (result == 0) {  //재고가 없을 경우
+            log.error("쿠폰이 모두 소진되었습니다.");
             throw new CouponSoldOut();
         }
 

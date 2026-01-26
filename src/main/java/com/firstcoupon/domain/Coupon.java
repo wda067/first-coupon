@@ -56,7 +56,7 @@ public class Coupon {
         this.code = code;
         this.couponName = couponName;
         this.totalQuantity = totalQuantity;
-        this.remainingQuantity = totalQuantity;
+        // this.remainingQuantity = totalQuantity;
         this.expirationDate = expirationDate;
         this.issueStartTime = issueStartTime;
         this.issueEndTime = issueEndTime;

@@ -60,6 +60,7 @@ public class IssuedCoupon {
                 .status(CouponStatus.ISSUED)
                 .build();
 
+        issuedCoupon.setCoupon(coupon);
         coupon.getIssuedCoupons().add(issuedCoupon);  //양방향 연관관계 설정
         return issuedCoupon;
     }

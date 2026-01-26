@@ -7,6 +7,8 @@ import com.firstcoupon.exception.CouponNotFound;
 import com.firstcoupon.repository.CouponRepository;
 import com.firstcoupon.repository.IssuedCouponRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,18 +16,25 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CouponIssueService {
 
+    private static final Logger logger = LoggerFactory.getLogger("CouponLogger");
+
     private final CouponRepository couponRepository;
     private final IssuedCouponRepository issuedCouponRepository;
 
     @Transactional
     public void handleCouponIssued(CouponIssuedEvent event) {
+        // if (event != null) {
+        //     throw new RuntimeException();
+        // }
+        logger.info("쿠폰 발급 시작");
         Long couponId = event.getCouponId();
-        couponRepository.decrementQuantity(couponId);  //JPQL 쿠폰 재고 감소
-        Coupon coupon = couponRepository.findById(couponId)  //쿠폰 조회
+        // couponRepository.decrementQuantity(couponId);  //JPQL 쿠폰 재고 감소
+        Coupon coupon = couponRepository.findById(couponId)  // 쿠폰 조회
                 .orElseThrow(CouponNotFound::new);
 
-        //쿠폰 발급
+        // 쿠폰 발급
         IssuedCoupon issuedCoupon = IssuedCoupon.issue(event.getEmail(), coupon);
         issuedCouponRepository.save(issuedCoupon);
+        logger.info("쿠폰 발급 완료");
     }
 }
